@@ -1,9 +1,7 @@
-"""SODA3 extraction and verifiable monthly Raw snapshots for BookScope."""
+"""SODA3 extraction and source reconciliation for BookScope."""
 
-from .ingest import (SodaClient, audit_range, compare_snapshots, ingest_cohort,
-                     ingest_month, iter_periods, logical_sha256, latest_usable_snapshot,
-                     verify_snapshot)
+from .ingest import (SodaClient, audit_range, ingest_cohort, ingest_month,
+                     iter_periods, latest_usable_snapshot)
 
-__all__ = ["SodaClient", "audit_range", "compare_snapshots", "ingest_cohort",
-           "ingest_month", "iter_periods", "logical_sha256", "latest_usable_snapshot",
-           "verify_snapshot"]
+__all__ = ["SodaClient", "audit_range", "ingest_cohort", "ingest_month",
+           "iter_periods", "latest_usable_snapshot"]

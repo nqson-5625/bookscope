@@ -9,8 +9,8 @@ import sys
 
 from dotenv import load_dotenv
 
-from .ingest import (SodaClient, audit_range, compare_snapshots, ingest_cohort, ingest_month,
-                     iter_periods, latest_usable_snapshot, verify_snapshot)
+from .ingest import (SodaClient, audit_range, ingest_cohort, ingest_month,
+                     iter_periods, latest_usable_snapshot)
 
 
 def main(argv=None) -> int:
@@ -31,21 +31,7 @@ def main(argv=None) -> int:
     run.add_argument("--title-batch-size", type=int)
     run.add_argument("--resume", action="store_true",
                      help="Reuse verified snapshots with the same config; retry missing/failed months")
-    verify = sub.add_parser("verify", help="Verify a completed snapshot offline")
-    verify.add_argument("snapshot_dir", type=Path)
-    compare = sub.add_parser("compare", help="Compare two same-scope snapshots offline")
-    compare.add_argument("first", type=Path)
-    compare.add_argument("second", type=Path)
     args = parser.parse_args(argv)
-    if args.command == "verify":
-        result = verify_snapshot(args.snapshot_dir)
-        print(json.dumps({"snapshot_id": result["snapshot_id"], "status": "COMPLETE",
-                          "row_count": result["row_count"]}, ensure_ascii=False))
-        return 0
-    if args.command == "compare":
-        result = compare_snapshots(args.first, args.second)
-        print(json.dumps(result, ensure_ascii=False))
-        return 0 if result["same_content"] else 3
     config_bytes = args.config.read_bytes()
     config = json.loads(config_bytes)
     ingestion_bytes = args.ingestion_config.read_bytes()

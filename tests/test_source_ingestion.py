@@ -7,10 +7,9 @@ import unittest
 from unittest.mock import patch
 from urllib.error import HTTPError
 
-from modules.source_ingestion.ingest import (SodaClient, audit_range, compare_snapshots,
-                                             ingest_cohort,
-                                             ingest_month, iter_periods, latest_usable_snapshot,
-                                             verify_snapshot)
+from modules.raw_snapshot import compare_snapshots, iter_rows, verify_snapshot
+from modules.source_ingestion.ingest import (SodaClient, audit_range, ingest_cohort,
+                                             ingest_month, iter_periods, latest_usable_snapshot)
 
 
 CONFIG = {
@@ -58,9 +57,9 @@ class SourceIngestionTests(unittest.TestCase):
                 return b'[{":id":"a"}]'
 
         error = HTTPError("https://example.test", 503, "busy", {}, io.BytesIO())
-        with patch("modules.source_ingestion.ingest.urlopen",
+        with patch("modules.source_ingestion.client.urlopen",
                    side_effect=[error, Response()]) as request, \
-                patch("modules.source_ingestion.ingest.time.sleep") as sleep:
+                patch("modules.source_ingestion.client.time.sleep") as sleep:
             client = SodaClient(CONFIG["source_url"], "secret", backoff=0)
             self.assertEqual(client.query("SELECT :id, * ORDER BY :id", page=2,
                                           page_size=10), [{":id": "a"}])
@@ -130,6 +129,9 @@ class SourceIngestionTests(unittest.TestCase):
                 with gzip.open(path / part["path"], "rt", encoding="utf-8") as stream:
                     data.extend(json.loads(line) for line in stream)
             self.assertEqual([item[":id"] for item in data], ["a", "c"])
+            replay = list(iter_rows(path))
+            self.assertEqual([item.source_row_number for item in replay], [1, 2])
+            self.assertEqual([item.source_payload[":id"] for item in replay], ["a", "c"])
             first = path / manifest["parts"][0]["path"]
             first.write_bytes(first.read_bytes() + b"tamper")
             with self.assertRaisesRegex(ValueError, "checksum"):
@@ -184,7 +186,7 @@ class SourceIngestionTests(unittest.TestCase):
             return [{"row_count": "1", "checkouts": "2"}]
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            with patch("modules.source_ingestion.ingest.verify_snapshot",
+            with patch("modules.raw_snapshot.validation.verify_snapshot",
                        side_effect=ValueError("forced verification failure")):
                 with self.assertRaisesRegex(ValueError, "forced verification failure"):
                     ingest_month(FakeClient(handle), CONFIG, "2023-01", root, "sha",
