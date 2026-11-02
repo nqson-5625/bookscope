@@ -1,6 +1,6 @@
 # BookScope
 
-Hệ thống batch phân tích lượt mượn sách của Seattle Public Library. [Thiết kế kỹ thuật](docs/BookScope.pdf) quy định luồng: Seattle Open Data → Python ingestion → Raw JSONL.gz → PostgreSQL Bronze → dbt Silver/Gold → Python Data Science → Streamlit. Repo hiện có `project_foundation` và `source_ingestion`; các lớp Bronze trở đi chưa được xây dựng.
+Hệ thống batch phân tích lượt mượn sách của Seattle Public Library. [Thiết kế kỹ thuật](docs/BookScope.pdf) quy định luồng: Seattle Open Data → Python ingestion → Raw JSONL.gz → PostgreSQL Bronze → dbt Silver/Gold → Python Data Science → Streamlit. Repo hiện có `project_foundation`, `source_ingestion` và `raw_snapshot`; các lớp Bronze trở đi chưa được xây dựng.
 
 ## Chạy project_foundation
 
@@ -31,9 +31,10 @@ Sau khi cấu hình `.env` và `PYTHONPATH` như trên:
 python -m modules.source_ingestion run --start 2023-01 --end 2023-01 --stream both
 python -m modules.source_ingestion run --stream both --resume --title-batch-size 500
 python -m modules.source_ingestion audit
+python -m modules.raw_snapshot select monthly_overview 2023-01
 ```
 
-Lệnh `run` mặc định tải cả 36 tháng; thêm `--resume` để tái dùng snapshot hợp lệ. Audit nguồn 02/11/2026 đã `PASS` trên 36 tháng, sau khi xử lý alias `Ebook → EBOOK` và rà soát các mã ngoài phạm vi; G1 toàn pipeline còn phụ thuộc Bronze. Xem [hướng dẫn ingestion](docs/source_ingestion.md) và [quyết định phạm vi MaterialType](docs/material_type_review.md).
+Lệnh `run` mặc định tải cả 36 tháng; thêm `--resume` để tái dùng snapshot hợp lệ. Audit nguồn 02/11/2026 đã `PASS` trên 36 tháng, sau khi xử lý alias `Ebook → EBOOK` và rà soát các mã ngoài phạm vi; G1 toàn pipeline còn phụ thuộc Bronze. Xem [hướng dẫn ingestion](docs/source_ingestion.md), [hướng dẫn Raw snapshot](docs/raw_snapshot.md) và [quyết định phạm vi MaterialType](docs/material_type_review.md).
 
 Kiểm thử:
 

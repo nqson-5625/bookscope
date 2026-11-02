@@ -1,6 +1,8 @@
 # source_ingestion
 
-Module này đọc SODA3 bằng POST với `SOCRATA_APP_TOKEN`, chọn cohort cố định theo tổng lượt mượn năm 2023, rồi tải hai luồng theo tháng 2023–2025. Mỗi lần tải tạo thư mục snapshot mới; không ghi đè snapshot cũ.
+Module này đọc SODA3 bằng POST với `SOCRATA_APP_TOKEN`, chọn cohort cố định theo tổng lượt mượn năm 2023, rồi tải hai luồng theo tháng 2023–2025. Việc ghi và xác minh snapshot do [`raw_snapshot`](raw_snapshot.md) đảm nhiệm; mỗi lần tải tạo thư mục mới và không ghi đè snapshot cũ.
+
+Code được chia theo trách nhiệm: `client.py` gọi SODA3, `selection.py` quản lý truy vấn/cohort, `overview.py` và `detail.py` trích xuất từng luồng, `extract.py` điều phối một tháng, `audit.py` kiểm tra toàn dải. `ingest.py` chỉ giữ các import tương thích với code cũ.
 
 ## Chạy
 
@@ -16,9 +18,9 @@ python -m modules.source_ingestion run --stream both --resume --title-batch-size
 python -m modules.source_ingestion audit
 ```
 
-`run` mặc định tải đủ 36 tháng. Có thể chỉ định `--start`, `--end`, `--stream overview|detail|both`, `--page-size`, `--title-batch-size`. `--resume` tái dùng snapshot COMPLETE đã xác minh với cùng quy tắc trích xuất; bỏ cờ này để tạo snapshot mới khi cần kiểm tra nguồn cập nhật ngược. Chạy `python -m modules.source_ingestion verify <thư_mục_snapshot>` để xác minh một snapshot không cần Internet hay token. `audit` kiểm tra snapshot COMPLETE mới nhất cho cả hai luồng ở từng tháng, hash/tổng dòng, mapping và từng dòng detail thuộc cohort theo chính sách alias; báo số tuple cohort xuất hiện/thiếu theo tháng. Quyết định loại trừ mã được áp dụng theo cấu hình hiện tại để có thể rà soát lại mà không sửa snapshot Raw. Kết quả nằm trong `data/raw/seattle_checkouts/ingestion_audit.json`. Exit code 2 nghĩa là còn vấn đề chặn phần ingestion của G1.
+`run` mặc định tải đủ 36 tháng. Có thể chỉ định `--start`, `--end`, `--stream overview|detail|both`, `--page-size`, `--title-batch-size`. `--resume` tái dùng snapshot COMPLETE đã xác minh với cùng quy tắc trích xuất; bỏ cờ này để tạo snapshot mới khi cần kiểm tra nguồn cập nhật ngược. Chạy `python -m modules.raw_snapshot verify <thư_mục_snapshot>` để xác minh một snapshot không cần Internet hay token. `audit` kiểm tra snapshot COMPLETE mới nhất cho cả hai luồng ở từng tháng, hash/tổng dòng, mapping và từng dòng detail thuộc cohort theo chính sách alias; báo số tuple cohort xuất hiện/thiếu theo tháng. Quyết định loại trừ mã được áp dụng theo cấu hình hiện tại để có thể rà soát lại mà không sửa snapshot Raw. Kết quả nằm trong `data/raw/seattle_checkouts/ingestion_audit.json`. Exit code 2 nghĩa là còn vấn đề chặn phần ingestion của G1.
 
-`python -m modules.source_ingestion compare <snapshot_A> <snapshot_B>` xác minh và so sánh nội dung logic của hai snapshot cùng tháng/scope, bỏ qua khác biệt thứ tự dòng và cách chia part. Exit code 0 là cùng nội dung; 3 là khác nội dung và cần xem nguồn có cập nhật ngược hay không. Lệnh này chạy offline.
+`python -m modules.raw_snapshot compare <snapshot_A> <snapshot_B>` xác minh và so sánh nội dung logic của hai snapshot cùng tháng/scope, bỏ qua khác biệt thứ tự dòng và cách chia part. Exit code 0 là cùng nội dung; 3 là khác nội dung và cần xem nguồn có cập nhật ngược hay không. Lệnh này chạy offline.
 
 ## Dữ liệu và giới hạn
 
@@ -35,7 +37,7 @@ Snapshot và cohort trong `data/raw/` không đưa vào Git; giữ bản sao và
 
 Hai snapshot detail 2023-01 dùng kích thước trang khác nhau đã cho cùng `logical_sha256=423234ac...` (734 dòng, 59.411 lượt mượn), chứng minh replay logic cho kỳ thử nghiệm. Hash file nén từng part có thể khác do cách chia trang.
 
-Nguồn dùng `Ebook` thay `EBOOK` vào 2024-05, 2024-06 và 2025-08. Alias có phiên bản khôi phục độ phủ ebook lần lượt 11,2936%, 11,1517%, 6,9309% trong ba tháng đó; manifest ghi số dòng/checkout được ghép bằng alias. Snapshot nằm trong `data/raw/` cục bộ, không nằm trong Git. `PASS` ở đây chỉ xác nhận module nguồn; G1 toàn pipeline vẫn cần `raw_snapshot`/`bronze_loading` và đối soát ở Bronze.
+Nguồn dùng `Ebook` thay `EBOOK` vào 2024-05, 2024-06 và 2025-08. Alias có phiên bản khôi phục độ phủ ebook lần lượt 11,2936%, 11,1517%, 6,9309% trong ba tháng đó; manifest ghi số dòng/checkout được ghép bằng alias. Snapshot nằm trong `data/raw/` cục bộ, không nằm trong Git. `PASS` ở đây xác nhận module nguồn và snapshot Raw; G1 toàn pipeline vẫn cần `bronze_loading` và đối soát ở Bronze.
 
 Trong 1.000 tuple cohort, audit thấy 669 tuple ở 2023-01, 852 ở 2024-06 và 863 ở 2025-08; số thiếu phản ánh tuple nguồn không xuất hiện đúng metadata trong tháng, không tự suy ra tài liệu không được mượn. Cần xem chi tiết khi phân tích lịch sử và biến thể title.
 
