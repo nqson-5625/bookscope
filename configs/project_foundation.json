@@ -1,0 +1,32 @@
+{
+  "dataset_id": "tmmm-ytt6",
+  "source_url": "https://data.seattle.gov/api/v3/views/tmmm-ytt6/query.json",
+  "period_start": "2023-01",
+  "period_end": "2025-12",
+  "profile_months": ["2023-01", "2024-06", "2025-01"],
+  "profile_rows_per_month": 100,
+  "profile_rows_per_material_type": 30,
+  "book_material_type_map": {
+    "BOOK": "PRINT_BOOK",
+    "REGPRINT": "PRINT_BOOK",
+    "LARGEPRINT": "PRINT_BOOK",
+    "EBOOK": "EBOOK",
+    "Ebook": "EBOOK"
+  },
+  "mapping_version": "v1_2026_11_02",
+  "book_mapping_status": "VERIFIED_IN_PROFILE_MONTHS",
+  "overview_grain": ["checkoutyear", "checkoutmonth", "materialtype", "usageclass"],
+  "detail_selection": {
+    "selection_start": "2023-01",
+    "selection_end": "2023-12",
+    "max_tuples": 1000,
+    "group_by": ["title", "creator", "materialtype", "checkouttype"],
+    "rank_metric": "sum(checkouts) descending",
+    "tie_breaker": "group_by fields ascending",
+    "backtest_earliest_evaluation_month": "2023-12"
+  },
+  "scopes": {
+    "ALL_ELIGIBLE_AGG": "All records eligible under book_material_type_map, aggregated by source month and format; no title-level claims",
+    "SELECTED_DETAIL": "A fixed cohort of at most 1000 title/creator/materialtype/checkouttype tuples selected by 2023 checkouts, then followed through 2025; retrospective comparisons start after 2023"
+  }
+}
