@@ -1,0 +1,20 @@
+{
+  "material_review_version": "v1_2026_11_02_exact_codes",
+  "reviewed_excluded_material_types": [
+    "ATLAS", "ATLAS, ER", "AUDIOBOOK", "Audiobook", "BOOK, ER",
+    "CHART", "COMPFILE", "CR", "ER", "ER, MAP", "ER, NONPROJGRAPH",
+    "ER, REGPRINT", "ER, SOUNDDISC", "ER, SOUNDDISC, SOUNDREC",
+    "ER, SOUNDREC", "ER, VIDEODISC", "ER, VIDEOREC",
+    "FLASHCARD, SOUNDDISC", "KIT", "MAP", "MAP, VIEW", "MICROFORM",
+    "MIXED", "MUSIC", "MUSICSNDREC", "NONPROJGRAPH", "NOTATEDMUSIC",
+    "PHOTO", "PICTURE", "PRINT", "REGPRINT, SOUNDDISC",
+    "REGPRINT, VIDEOREC", "SLIDE", "SOUNDCASS", "SOUNDDISC",
+    "SOUNDDISC, SOUNDREC", "SOUNDDISC, VIDEOCASS",
+    "SOUNDDISC, VIDEODISC", "SOUNDREC", "UNSPECIFIED", "VIDEOCART",
+    "VIDEOCASS", "VIDEODISC", "VIDEOREC", "VISUAL"
+  ],
+  "cohort_material_aliases": {"Ebook": "EBOOK"},
+  "cohort_match_version": "v2_ebook_case_alias",
+  "page_size": 1000,
+  "title_batch_size": 500
+}
