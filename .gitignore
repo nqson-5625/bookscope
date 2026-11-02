@@ -1,4 +1,5 @@
 .env
+.docker-cli/
 __pycache__/
 *.py[cod]
 .pytest_cache/

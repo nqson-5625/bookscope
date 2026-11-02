@@ -1,0 +1,24 @@
+name: bookscope
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${BOOKSCOPE_DB_NAME:-bookscope}
+      POSTGRES_USER: ${BOOKSCOPE_DB_USER:-bookscope}
+      POSTGRES_PASSWORD: ${BOOKSCOPE_DB_PASSWORD:?Set BOOKSCOPE_DB_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:${BOOKSCOPE_DB_PORT:-5433}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+volumes:
+  postgres_data:
