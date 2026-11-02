@@ -1,0 +1,18 @@
+{
+  "source": "https://data.seattle.gov/api/v3/views/tmmm-ytt6/query.json",
+  "observed_at_utc": "2026-11-02T08:17:43.309055+00:00",
+  "periods": [
+    "2023-01",
+    "2024-06",
+    "2025-01"
+  ],
+  "excerpt_rows": 15,
+  "excerpt_sha256": "127b57bf943f1cdcbc1b36c4ac754ca91d6c3c50af3a9cdeb646be320188ad07",
+  "full_sample_rows": 660,
+  "full_sample_file_sha256": "bd8c5e8620e38c7a198a91fe350566789c4ff89ca39e718f03029485f9ad7830",
+  "mapping_version": "v1_2026_11_02",
+  "scope_note": "Ordered source excerpt for schema and code evidence; not a population estimate.",
+  "cohort_2023_file_sha256": "74c59741569fa43d19573b115a30763c876878ca03d38220a9dc7503e99990a4",
+  "cohort_2023_coverage_percent": 12.918,
+  "config_sha256": "955403957be5ac343ad91d8a92c67b114732b50be4b6950b4287ade352443e76"
+}
