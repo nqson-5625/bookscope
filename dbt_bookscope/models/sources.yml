@@ -1,0 +1,45 @@
+version: 2
+
+sources:
+  - name: ops
+    description: Snapshot registry; only COMPLETE snapshots are eligible for Silver selection.
+    schema: ops
+    tables:
+      - name: data_snapshots
+        description: One registered, verified Raw snapshot per snapshot_id.
+        columns:
+          - name: snapshot_id
+            data_tests: [not_null, unique]
+          - name: stream
+            data_tests: [not_null]
+          - name: scope_id
+            data_tests: [not_null]
+          - name: period
+            data_tests: [not_null]
+  - name: bronze
+    description: Immutable source payloads and the Raw to Bronze reconciliation gate.
+    schema: bronze
+    tables:
+      - name: checkout_records
+        description: One source row per snapshot and source_row_number; payload remains JSONB.
+        columns:
+          - name: snapshot_id
+            data_tests: [not_null]
+          - name: source_row_number
+            data_tests: [not_null]
+          - name: source_payload
+            data_tests: [not_null]
+      - name: load_batches
+        description: Loading attempts; exactly one COMPLETE batch is permitted per snapshot.
+        columns:
+          - name: batch_id
+            data_tests: [not_null, unique]
+          - name: snapshot_id
+            data_tests: [not_null]
+      - name: snapshot_load_reconciliation
+        description: Per-snapshot gate; ready_for_transform must be true before Silver processing.
+        columns:
+          - name: snapshot_id
+            data_tests: [not_null, unique]
+          - name: ready_for_transform
+            data_tests: [not_null]
