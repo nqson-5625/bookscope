@@ -11,3 +11,10 @@ vars:
   silver_mapping_version: v1_2026_11_02
   silver_period_start: '2023-01-01'
   silver_period_end: '2025-12-01'
+  gold_contract_version: v1_2026_11_04
+  gold_identity_version: cohort_tuple_v1
+
+models:
+  dbt_bookscope:
+    gold:
+      +schema: gold

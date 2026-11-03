@@ -36,6 +36,16 @@ Sau `silver_transformation run`, chạy
 Raw–Bronze–Silver theo định dạng và mở gate DQ. Xem
 [hướng dẫn Data Quality](data_quality.md).
 
+Đầu vào `gold_analytics_marts` đã chuẩn bị tại `models/gold/` và
+[`dbt_project.yml`](../dbt_bookscope/dbt_project.yml): local `dev` ánh xạ
+model Gold vào schema `gold` qua `generate_schema_name`, Silver giữ `silver`;
+CI giữ tiền tố target schema. DQ approved views được khai báo là dbt sources;
+Gold dùng `source('silver', 'dq_approved_overview_groups')`,
+`source('silver', 'dq_approved_detail_records')` và
+`source('ops', 'dq_gate')`.
+Xem [Gold Entry Gate](gold_entry_gate_2026-11-04.md). Trước khi có model Gold,
+dbt báo một unused config path `models.dbt_bookscope.gold` như dự kiến.
+
 Ngày 03/11/2026 trên PostgreSQL local: `dbt debug` trả `All checks passed!`,
 adapter `postgres=1.10.0`, `Connection test: OK connection ok`. Không có thao
 tác sửa dữ liệu khi chạy debug/parse/ls. `dbt parse` thành công, `dbt ls`
