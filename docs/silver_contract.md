@@ -1,8 +1,8 @@
 # Silver Data Contract và Logical Schema — v1_2026_11_03
 
-Trạng thái: **chốt cho triển khai `silver_transformation`**. Phạm vi là 36 tháng
-2023-01–2025-12, hai stream đã nghiệm thu Bronze. Đây là hợp đồng logic;
-`silver` hiện chưa có model hoặc bảng vật lý. Mọi thay đổi grain, mapping hay
+Trạng thái: **đã triển khai trong `silver_transformation`**. Phạm vi là 36 tháng
+2023-01–2025-12, hai stream đã nghiệm thu Bronze. Model và lệnh chạy ở
+[tài liệu Silver](silver_transformation.md). Mọi thay đổi grain, mapping hay
 quy tắc reject phải tăng `contract_version` và chạy lại quality gate.
 
 ## Phạm vi, grain và khóa
@@ -64,7 +64,7 @@ cohort matching là `v2_ebook_case_alias`. Khi version ở registry khác versio
 
 | Rule | Mức | Xử lý |
 | --- | --- | --- |
-| `SNAPSHOT_NOT_READY`, `VERSION_MISMATCH`, thiếu tháng/scope | BLOCK snapshot | Không đọc sang Silver/publish; ghi `snapshot_quality`. |
+| `SNAPSHOT_NOT_READY`, `VERSION_MISMATCH`, thiếu tháng/scope | BLOCK snapshot | Không đọc sang Silver/publish; snapshot có ID được ghi vào `snapshot_quality`, tháng thiếu ID được ghi ở `pipeline_gate` và `run_snapshot_selection`. |
 | `INVALID_PERIOD`, `INVALID_CHECKOUTS`, `BIGINT_OVERFLOW`, `UNKNOWN_MATERIAL`, `BLANK_USAGE_CLASS` | BLOCK row và snapshot | Đưa dòng vào quarantine, kèm mã rule và payload; không cộng dòng lỗi. |
 | `INVALID_SOURCE_ROW_COUNT`, `DUPLICATE_OVERVIEW_GROUP` | BLOCK row và snapshot | Overview cần `row_count > 0`, mỗi nhóm nguồn duy nhất trong snapshot. |
 | `DETAIL_PERIOD_MISMATCH`, `MISSING_SOURCE_ID`, `DUPLICATE_SOURCE_ID`, `BLANK_TITLE`, `BLANK_CHECKOUT_TYPE` | BLOCK row và snapshot | Detail phải có year/month đúng `period`, ID và title/checkout type có nội dung; giữ tất cả dòng khác nhau cùng tuple. |
@@ -75,10 +75,10 @@ Chỉ parse số nguyên thập phân không dấu, không âm, nằm trong `big
 checkouts hợp lệ và khác NULL. Không ép giá trị sai thành 0. Overview không có
 `checkoutyear/checkoutmonth` trong payload nên kỳ lấy từ registry; detail phải
 kiểm tra hai cột nguồn khớp kỳ đó. Mọi dòng Bronze của snapshot được phân
-loại vào valid hoặc quarantine, không mất dòng. Gate pass khi reject = 0,
+loại vào valid hoặc quarantine với snapshot `READY`, không mất dòng. Gate pass khi reject = 0,
 không có lỗi cấp snapshot, các khóa duy nhất và tổng khớp Bronze/manifest.
-WARN được thống kê riêng, không làm mất dòng. `silver_transformation` phải
-hiện thực các rule này bằng model và dbt tests trước khi Gold dùng dữ liệu.
+WARN được thống kê riêng, không làm mất dòng. `silver_transformation` hiện
+thực các rule này bằng model và dbt tests trước khi Gold dùng dữ liệu.
 
 ## Quarantine và truy vết
 

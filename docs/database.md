@@ -21,7 +21,8 @@ Container có healthcheck `pg_isready`; module tương lai có thể đặt
 ## Bảng và khóa
 
 File [DDL nền tảng](../sql/init/001_bronze_foundation.sql) tạo `ops`, `bronze`,
-`silver`, `gold`; hai schema sau đang để trống cho dbt. View đối soát nằm trong
+`silver`, `gold`; `silver` hiện do dbt tạo các model transformation, còn `gold`
+để cho bước tiếp theo. View đối soát nằm trong
 [SQL kế tiếp](../sql/init/002_checkout_reconciliation.sql). Các bảng hiện có:
 
 | Bảng | Grain/khóa | Trách nhiệm |
