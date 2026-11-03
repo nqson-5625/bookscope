@@ -16,6 +16,10 @@ sources:
             data_tests: [not_null]
           - name: period
             data_tests: [not_null]
+      - name: dq_gate
+        description: Current DQ approval; Gold reads only when status is PASS.
+      - name: dq_runs
+        description: Historical DQ runs pinned by future Gold publications.
   - name: bronze
     description: Immutable source payloads and the Raw to Bronze reconciliation gate.
     schema: bronze
@@ -43,3 +47,11 @@ sources:
             data_tests: [not_null, unique]
           - name: ready_for_transform
             data_tests: [not_null]
+  - name: silver
+    description: DQ approved Silver inputs for Gold, created by the DQ migration.
+    schema: silver
+    tables:
+      - name: dq_approved_overview_groups
+        description: Monthly overview groups visible only while Silver and DQ gates pass.
+      - name: dq_approved_detail_records
+        description: Detail source rows visible only while Silver and DQ gates pass.
