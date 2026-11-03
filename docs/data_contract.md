@@ -28,6 +28,11 @@ Hợp đồng này cụ thể hóa mục 3, 5–7 của [thiết kế](BookScope
 | Gold detail | `book_record_key × month_start × format_key × scope_id × data_version` (thêm channel nếu profile chứng minh cần) | Không trùng grain; không nhân bản do Subjects | source identity, mapping version |
 | DS | Book/key × evaluation month × scope × data/model version | Score có components, evidence, reliability, reason/limitation codes | Gold version và incident policy |
 
+Thiết kế Gold hiện hành, bao gồm `book_record_key` theo tuple cohort có phiên
+bản, nằm ở [Gold Data Contract](gold_contract.md); KPI và bằng chứng profile
+ở [Gold KPI Spec](gold_kpi_spec.md) và
+[Gold entry profiling](gold_profile_2026-11-04.md).
+
 `raw_snapshot.iter_rows` chỉ phát các dòng từ snapshot `COMPLETE` đã xác minh. Mỗi dòng có `snapshot_id`, `source_row_number` (đánh số từ 1 theo thứ tự part trong manifest), `raw_path` và payload gốc; `bronze_loading` dùng cặp `(snapshot_id, source_row_number)` làm khóa kỹ thuật. Với overview, `row_count` là số nhóm Raw để nạp Bronze, còn `source_row_count` là số dòng SODA3 bên dưới các nhóm.
 
 DDL PostgreSQL của `ops.data_snapshots`, `bronze.load_batches` và `bronze.checkout_records` nằm trong [thiết kế database](database.md). `bronze.snapshot_load_reconciliation` chỉ tính bản ghi từ batch `COMPLETE`, kiểm tra số dòng Bronze, tổng `checkouts` và, với overview, tổng `row_count` nguồn trước khi đưa snapshot sang Silver.
