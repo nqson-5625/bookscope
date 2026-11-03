@@ -1,6 +1,10 @@
-# Hợp đồng dữ liệu sơ bộ
+# Hợp đồng dữ liệu tổng quan
 
-Hợp đồng này cụ thể hóa mục 3, 5–7 của [thiết kế](BookScope.pdf). Schema bên dưới đã được quan sát trong mẫu live 2023-01, 2024-06, 2025-01; các tháng khác cần kiểm tra trong ingestion. Dataset `tmmm-ytt6` dùng tên trường API viết thường.
+Silver Data Contract và Logical Schema v1 đã chốt tại
+[silver_contract.md](silver_contract.md). Mọi quy tắc Silver chi tiết trong tài
+liệu đó thay thế mô tả sơ bộ của bảng bên dưới.
+
+Hợp đồng này cụ thể hóa mục 3, 5–7 của [thiết kế](BookScope.pdf). Schema bên dưới được quan sát trong mẫu live 2023-01, 2024-06, 2025-01; ingestion đã kiểm tra 36 tháng trong phạm vi MVP. Dataset `tmmm-ytt6` dùng tên trường API viết thường.
 
 | Field nguồn | Kiểu dự kiến | Quy tắc | Vai trò |
 | --- | --- | --- | --- |
@@ -19,7 +23,7 @@ Hợp đồng này cụ thể hóa mục 3, 5–7 của [thiết kế](BookScope
 | --- | --- | --- | --- |
 | Raw | Một snapshot theo stream × tháng × scope; nhiều part | JSONL.gz đọc được; SHA-256 và số dòng khớp; trạng thái COMPLETE | `snapshot_id`, query, source URL, extracted_at, code/config version, page log |
 | Bronze | Một dòng nguồn × snapshot; unique `(snapshot_id, source_row_number)` | Payload JSONB và số dòng bằng Raw | `raw_path`, `snapshot_id`, `source_row_number` |
-| Silver | Một dòng nguồn hợp lệ sau parse/dedup; quarantine riêng | Month/checkouts hợp lệ; rule identity/dedup versioned; reject có reason | source key, snapshot, scope, mapping version |
+| Silver | Một nhóm overview hoặc một dòng detail hợp lệ theo snapshot; không dedup detail theo metadata | Kỳ/checkouts/mapping hợp lệ, quarantine có reason; đối soát từng snapshot | source key, snapshot, scope, mapping/contract version |
 | Gold overview | `month_start × format_key × scope_id × data_version` | Không trùng key; tổng checkouts đối soát theo đúng scope | publication/data version, source snapshot |
 | Gold detail | `book_record_key × month_start × format_key × scope_id × data_version` (thêm channel nếu profile chứng minh cần) | Không trùng grain; không nhân bản do Subjects | source identity, mapping version |
 | DS | Book/key × evaluation month × scope × data/model version | Score có components, evidence, reliability, reason/limitation codes | Gold version và incident policy |

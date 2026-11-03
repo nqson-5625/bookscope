@@ -1,6 +1,11 @@
-# ERD logic sơ bộ
+# ERD logic tổng quan
 
-Theo mục 5 của [BookScope.pdf](BookScope.pdf). Grain/identity chi tiết chỉ được chốt sau profile nguồn.
+Grain, khóa và quan hệ logic Silver được chốt tại
+[Silver Data Contract](silver_contract.md); sơ đồ dưới đây thể hiện các lớp
+Gold/DS ở mức tổng quan và chưa phải DDL.
+
+Theo mục 5 của [BookScope.pdf](BookScope.pdf). Grain Silver đã chốt;
+`book_record_key` cho Gold cần profile identity riêng trước khi triển khai.
 
 ```mermaid
 erDiagram
@@ -83,4 +88,7 @@ erDiagram
   }
 ```
 
-`silver.valid_checkouts`, `silver.book_record_map`, `silver.format_map` và bảng quarantine nằm giữa Bronze và Gold; chưa vẽ quan hệ FK vì quy tắc identity chưa được xác minh. Đây là mô hình logic, không phải DDL để chạy trực tiếp.
+`silver.overview_groups`, `silver.detail_records`, `silver.quarantine_records`
+và `silver.snapshot_quality` nằm giữa Bronze và Gold. Chưa vẽ quan hệ FK
+cho `book_record_key` vì quy tắc identity chưa được xác minh. Đây là mô hình
+logic, không phải DDL để chạy trực tiếp.
