@@ -67,3 +67,18 @@ Kiểm thử:
 $env:PYTHONPATH = "src"
 python -m unittest discover -s tests -v
 ```
+
+## Silver contract và dbt
+
+[Silver Data Contract và Logical Schema](docs/silver_contract.md) chốt grain,
+khóa, cột chuẩn hóa, snapshot hiệu lực, validation và quarantine cho hai
+stream. Project [`dbt_bookscope`](dbt_bookscope/dbt_project.yml) đã khai báo
+Bronze sources và kết nối PostgreSQL local. Sau khi cài dependencies vào
+`.venv` và cấu hình `.env`:
+
+```powershell
+.\.venv\Scripts\python.exe scripts/run_dbt.py debug
+.\.venv\Scripts\python.exe scripts/run_dbt.py ls --resource-type source
+```
+
+Xem [hướng dẫn dbt](docs/dbt_setup.md) để cài và chạy. Chưa có model Silver.

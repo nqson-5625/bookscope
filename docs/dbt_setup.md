@@ -1,0 +1,35 @@
+# dbt cho BookScope
+
+Project nằm trong `dbt_bookscope/`; profile PostgreSQL nằm cùng project và
+dùng biến `BOOKSCOPE_DB_*` của `.env` ở gốc repo. Mật khẩu không được ghi trong
+Git. Adapter hiện được kiểm chứng: `dbt-core 1.11.10` + `dbt-postgres 1.10.0`.
+`requirements.txt` giới hạn hai dòng phiên bản tương thích.
+
+Từ thư mục gốc repo, khi PostgreSQL đã chạy và `.env` có
+`BOOKSCOPE_DB_PASSWORD`:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe scripts/run_dbt.py debug
+.\.venv\Scripts\python.exe scripts/run_dbt.py parse
+.\.venv\Scripts\python.exe scripts/run_dbt.py ls --resource-type source
+```
+
+`scripts/run_dbt.py` nạp biến còn thiếu từ `.env`, ưu tiên biến môi trường
+đang đặt và truyền thư mục project/profile cho dbt. Mọi lệnh dbt khác cũng
+chạy qua wrapper này, ví dụ `python scripts/run_dbt.py test --select source:*`.
+Nếu dùng dbt trực tiếp, cần tự export biến `.env` rồi truyền `--project-dir`
+và `--profiles-dir` sau lệnh dbt.
+
+`models/sources.yml` khai báo `ops.data_snapshots`,
+`bronze.checkout_records`, `bronze.load_batches` và
+`bronze.snapshot_load_reconciliation`. View reconciliation là gate đầu vào;
+model Silver sau này chỉ chọn `ready_for_transform = true` theo
+[Silver contract](silver_contract.md). Chưa có model Silver; `dbt debug` xác
+nhận cấu hình/kết nối, `dbt parse` và `dbt ls` xác nhận khai báo source.
+
+Ngày 03/11/2026 trên PostgreSQL local: `dbt debug` trả `All checks passed!`,
+adapter `postgres=1.10.0`, `Connection test: OK connection ok`. Không có thao
+tác sửa dữ liệu khi chạy debug/parse/ls. `dbt parse` thành công, `dbt ls`
+nhận diện 4 sources, và `dbt test --select 'source:*'` đạt 14/14 tests.
