@@ -39,6 +39,8 @@ bước đối chiếu Raw với registry của CLI này.
 `active_*` chỉ dùng snapshot mới nhất, contract version hiện hành và gate PASS.
 Gold sau này cần đọc các view này cùng bằng chứng publication/data version;
 chưa có Gold trong repo.
+Sau Silver, chạy [module Data Quality](data_quality.md) để đối soát độc lập
+với manifest Raw theo từng định dạng và mở `silver.dq_approved_*` cho Gold.
 
 ## Nghiệm thu local 03/11/2026
 

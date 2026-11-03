@@ -1,6 +1,6 @@
 # BookScope
 
-Hệ thống batch phân tích lượt mượn sách của Seattle Public Library. [Thiết kế kỹ thuật](docs/BookScope.pdf) quy định luồng: Seattle Open Data → Python ingestion → Raw JSONL.gz → PostgreSQL Bronze → dbt Silver/Gold → Python Data Science → Streamlit. Repo hiện có `project_foundation`, `source_ingestion`, `raw_snapshot`, `bronze_loading`, `silver_transformation` và hạ tầng PostgreSQL; Gold và các lớp sau chưa được xây dựng.
+Hệ thống batch phân tích lượt mượn sách của Seattle Public Library. [Thiết kế kỹ thuật](docs/BookScope.pdf) quy định luồng: Seattle Open Data → Python ingestion → Raw JSONL.gz → PostgreSQL Bronze → dbt Silver/Gold → Python Data Science → Streamlit. Repo hiện có `project_foundation`, `source_ingestion`, `raw_snapshot`, `bronze_loading`, `silver_transformation`, `data_quality` và hạ tầng PostgreSQL; Gold và các lớp sau chưa được xây dựng.
 
 ## Chạy project_foundation
 
@@ -87,6 +87,10 @@ Chạy đầy đủ Raw audit, đối chiếu registry và dbt Silver:
 $env:PYTHONPATH = "src"
 .\.venv\Scripts\python.exe -m modules.silver_transformation run
 .\.venv\Scripts\python.exe -m modules.silver_transformation status
+.\.venv\Scripts\python.exe -m modules.data_quality run
+.\.venv\Scripts\python.exe -m modules.data_quality status
 ```
 
-Xem [hướng dẫn dbt](docs/dbt_setup.md) và [tài liệu Silver](docs/silver_transformation.md).
+Xem [hướng dẫn dbt](docs/dbt_setup.md), [tài liệu Silver](docs/silver_transformation.md)
+và [hướng dẫn Data Quality](docs/data_quality.md). Gold sau này dùng các view
+`silver.dq_approved_*` khi gate DQ PASS.

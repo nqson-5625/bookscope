@@ -31,6 +31,11 @@ Chạy `python -m modules.silver_transformation run` để kiểm tra Raw audit 
 manifest đăng ký trước `dbt build`; xem [hướng dẫn Silver](silver_transformation.md).
 `dbt debug` xác nhận cấu hình/kết nối, `dbt parse` và `dbt ls` xác nhận source.
 
+Sau `silver_transformation run`, chạy
+`python -m modules.data_quality run` để lưu lịch sử dbt tests, đối chiếu
+Raw–Bronze–Silver theo định dạng và mở gate DQ. Xem
+[hướng dẫn Data Quality](data_quality.md).
+
 Ngày 03/11/2026 trên PostgreSQL local: `dbt debug` trả `All checks passed!`,
 adapter `postgres=1.10.0`, `Connection test: OK connection ok`. Không có thao
 tác sửa dữ liệu khi chạy debug/parse/ls. `dbt parse` thành công, `dbt ls`
