@@ -6,3 +6,7 @@ __pycache__/
 data/raw/
 data/profiles/
 *.log
+.venv/
+dbt_bookscope/target/
+dbt_bookscope/dbt_packages/
+dbt_bookscope/.user.yml
