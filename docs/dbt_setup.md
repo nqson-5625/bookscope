@@ -24,10 +24,12 @@ và `--profiles-dir` sau lệnh dbt.
 
 `models/sources.yml` khai báo `ops.data_snapshots`,
 `bronze.checkout_records`, `bronze.load_batches` và
-`bronze.snapshot_load_reconciliation`. View reconciliation là gate đầu vào;
-model Silver sau này chỉ chọn `ready_for_transform = true` theo
-[Silver contract](silver_contract.md). Chưa có model Silver; `dbt debug` xác
-nhận cấu hình/kết nối, `dbt parse` và `dbt ls` xác nhận khai báo source.
+`bronze.snapshot_load_reconciliation`. Model dòng hợp lệ trong `models/silver/`
+chỉ đọc snapshot mới nhất đã qua gate; model quality ghi cả snapshot bị chặn
+theo [Silver contract](silver_contract.md).
+Chạy `python -m modules.silver_transformation run` để kiểm tra Raw audit và
+manifest đăng ký trước `dbt build`; xem [hướng dẫn Silver](silver_transformation.md).
+`dbt debug` xác nhận cấu hình/kết nối, `dbt parse` và `dbt ls` xác nhận source.
 
 Ngày 03/11/2026 trên PostgreSQL local: `dbt debug` trả `All checks passed!`,
 adapter `postgres=1.10.0`, `Connection test: OK connection ok`. Không có thao

@@ -1,6 +1,6 @@
 # BookScope
 
-Hệ thống batch phân tích lượt mượn sách của Seattle Public Library. [Thiết kế kỹ thuật](docs/BookScope.pdf) quy định luồng: Seattle Open Data → Python ingestion → Raw JSONL.gz → PostgreSQL Bronze → dbt Silver/Gold → Python Data Science → Streamlit. Repo hiện có `project_foundation`, `source_ingestion`, `raw_snapshot`, `bronze_loading` và hạ tầng PostgreSQL/Bronze; các lớp sau Bronze chưa được xây dựng.
+Hệ thống batch phân tích lượt mượn sách của Seattle Public Library. [Thiết kế kỹ thuật](docs/BookScope.pdf) quy định luồng: Seattle Open Data → Python ingestion → Raw JSONL.gz → PostgreSQL Bronze → dbt Silver/Gold → Python Data Science → Streamlit. Repo hiện có `project_foundation`, `source_ingestion`, `raw_snapshot`, `bronze_loading`, `silver_transformation` và hạ tầng PostgreSQL; Gold và các lớp sau chưa được xây dựng.
 
 ## Chạy project_foundation
 
@@ -81,4 +81,12 @@ Bronze sources và kết nối PostgreSQL local. Sau khi cài dependencies vào
 .\.venv\Scripts\python.exe scripts/run_dbt.py ls --resource-type source
 ```
 
-Xem [hướng dẫn dbt](docs/dbt_setup.md) để cài và chạy. Chưa có model Silver.
+Chạy đầy đủ Raw audit, đối chiếu registry và dbt Silver:
+
+```powershell
+$env:PYTHONPATH = "src"
+.\.venv\Scripts\python.exe -m modules.silver_transformation run
+.\.venv\Scripts\python.exe -m modules.silver_transformation status
+```
+
+Xem [hướng dẫn dbt](docs/dbt_setup.md) và [tài liệu Silver](docs/silver_transformation.md).
