@@ -94,3 +94,7 @@ $env:PYTHONPATH = "src"
 Xem [hướng dẫn dbt](docs/dbt_setup.md), [tài liệu Silver](docs/silver_transformation.md)
 và [hướng dẫn Data Quality](docs/data_quality.md). Gold sau này dùng các view
 `silver.dq_approved_*` khi gate DQ PASS.
+
+[Gold Entry Gate 04/11/2026](docs/gold_entry_gate_2026-11-04.md) đã chốt
+profile, KPI, contract/ERD, publication policy và test plan để bắt đầu
+`gold_analytics_marts`; chưa có Gold model hoặc bản công bố dữ liệu.
