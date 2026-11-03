@@ -56,6 +56,12 @@ trống. Khi thay đổi schema sau này, tạo migration mới và áp dụng l
 đang tồn tại; khởi động lại container không tự áp dụng lại file init. Không
 dùng `docker compose down -v` nếu cần giữ dữ liệu.
 
+Sau khi Silver được build, `python -m modules.data_quality run` áp dụng
+[migration DQ](../sql/data_quality/001_results.sql) và tạo `ops.dq_runs`,
+`ops.dq_results`, `ops.dq_source_revisions`, `ops.dq_gate` cùng hai view
+`silver.dq_approved_*`. Trigger trên các bảng nguồn tăng revision khi có ghi;
+gate DQ so với revision đã kiểm để chặn dữ liệu thay đổi trước khi Gold sử dụng.
+
 Với volume đã tạo trước khi có gate `checkouts`, áp dụng file SQL mới mà không
 xóa dữ liệu:
 
