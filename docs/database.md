@@ -62,7 +62,9 @@ xóa dữ liệu:
 Get-Content sql/init/002_checkout_reconciliation.sql -Raw | docker compose exec -T db psql -v ON_ERROR_STOP=1 -U bookscope -d bookscope
 ```
 
-`bronze_loading` sẽ đăng ký manifest `COMPLETE` trong `ops.data_snapshots`, tạo
-batch, ghi các bản ghi từ `raw_snapshot.iter_rows`, đối soát số dòng rồi đánh
-dấu batch `COMPLETE` trong cùng transaction. Retry không được nhân đôi dòng vì
-primary key `(snapshot_id, source_row_number)`.
+`bronze_loading` đăng ký manifest `COMPLETE` trong `ops.data_snapshots`, tạo
+batch, ghi các bản ghi từ `raw_snapshot.iter_rows` và chỉ commit batch `COMPLETE`
+cùng dữ liệu khi view đối soát đạt. Lần nạp lỗi được rollback và ghi batch
+`FAILED` riêng. Retry không nhân đôi dòng vì batch `COMPLETE` đạt gate được tái
+sử dụng và primary key `(snapshot_id, source_row_number)` chặn trùng. Xem
+[hướng dẫn nạp Bronze](bronze_loading.md).

@@ -1,6 +1,6 @@
 # BookScope
 
-Hệ thống batch phân tích lượt mượn sách của Seattle Public Library. [Thiết kế kỹ thuật](docs/BookScope.pdf) quy định luồng: Seattle Open Data → Python ingestion → Raw JSONL.gz → PostgreSQL Bronze → dbt Silver/Gold → Python Data Science → Streamlit. Repo hiện có `project_foundation`, `source_ingestion`, `raw_snapshot` và hạ tầng PostgreSQL/Bronze; module nạp Bronze và các lớp sau chưa được xây dựng.
+Hệ thống batch phân tích lượt mượn sách của Seattle Public Library. [Thiết kế kỹ thuật](docs/BookScope.pdf) quy định luồng: Seattle Open Data → Python ingestion → Raw JSONL.gz → PostgreSQL Bronze → dbt Silver/Gold → Python Data Science → Streamlit. Repo hiện có `project_foundation`, `source_ingestion`, `raw_snapshot`, `bronze_loading` và hạ tầng PostgreSQL/Bronze; các lớp sau Bronze chưa được xây dựng.
 
 ## Chạy project_foundation
 
@@ -45,7 +45,21 @@ python scripts/init_db_env.py
 docker compose up -d --wait db
 ```
 
-Xem [thiết kế bảng và cách kiểm tra database](docs/database.md). `bronze_loading` chưa được triển khai.
+Xem [thiết kế bảng và cách kiểm tra database](docs/database.md).
+
+## Nạp Bronze
+
+Sau khi cài `requirements.txt`, tạo `.env` và khởi động PostgreSQL:
+
+```powershell
+$env:PYTHONPATH = "src"
+$snapshot = python -m modules.raw_snapshot select monthly_overview 2023-01 | ConvertFrom-Json
+python -m modules.bronze_loading load $snapshot.path
+python -m modules.bronze_loading range --start 2023-01 --end 2023-01 --stream both
+```
+
+Lệnh `range` chọn snapshot Raw `COMPLETE` mới nhất cho từng stream/tháng; chạy lại
+sẽ báo `REUSED` khi batch đã nạp và đối soát đạt. Xem [hướng dẫn nạp Bronze](docs/bronze_loading.md).
 
 Kiểm thử:
 

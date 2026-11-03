@@ -26,7 +26,7 @@ Hợp đồng này cụ thể hóa mục 3, 5–7 của [thiết kế](BookScope
 
 `raw_snapshot.iter_rows` chỉ phát các dòng từ snapshot `COMPLETE` đã xác minh. Mỗi dòng có `snapshot_id`, `source_row_number` (đánh số từ 1 theo thứ tự part trong manifest), `raw_path` và payload gốc; `bronze_loading` dùng cặp `(snapshot_id, source_row_number)` làm khóa kỹ thuật. Với overview, `row_count` là số nhóm Raw để nạp Bronze, còn `source_row_count` là số dòng SODA3 bên dưới các nhóm.
 
-DDL PostgreSQL của `ops.data_snapshots`, `bronze.load_batches` và `bronze.checkout_records` nằm trong [thiết kế database](database.md). `bronze.snapshot_load_reconciliation` kiểm tra số dòng và tổng `checkouts` trước khi đưa snapshot sang Silver.
+DDL PostgreSQL của `ops.data_snapshots`, `bronze.load_batches` và `bronze.checkout_records` nằm trong [thiết kế database](database.md). `bronze.snapshot_load_reconciliation` chỉ tính bản ghi từ batch `COMPLETE`, kiểm tra số dòng Bronze, tổng `checkouts` và, với overview, tổng `row_count` nguồn trước khi đưa snapshot sang Silver.
 
 `ALL_ELIGIBLE_AGG` và `SELECTED_DETAIL` không được cộng hoặc so sánh trực tiếp như cùng một tổng thể. `row_count` và tổng checkouts phải đối soát từng tháng và định dạng; reject được báo riêng. Sự thiếu ISBN/Subjects là WARN, lỗi checkouts/grain/checksum/reconciliation là BLOCK. Gold chỉ publish sau khi quality gate toàn pipeline đạt. Khi snapshot mới thay tháng cũ, record hiệu lực được chọn theo **snapshot COMPLETE mới nhất cho tháng/scope đã tải đủ**; publication trước vẫn truy xuất được.
 
