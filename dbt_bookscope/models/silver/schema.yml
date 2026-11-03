@@ -1,0 +1,66 @@
+version: 2
+
+models:
+  - name: format_map
+    description: Exact five-code book eligibility mapping, versioned with the Silver contract.
+    columns:
+      - name: materialtype_raw
+        data_tests: [not_null, unique]
+      - name: format_key
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['PRINT_BOOK', 'EBOOK']
+  - name: overview_groups
+    description: Valid monthly source aggregate groups, one Bronze group per snapshot and source row.
+    columns:
+      - name: snapshot_id
+        data_tests: [not_null]
+      - name: source_row_number
+        data_tests: [not_null]
+      - name: checkouts
+        data_tests: [not_null]
+      - name: source_row_count
+        data_tests: [not_null]
+  - name: detail_records
+    description: Valid selected cohort source rows, without metadata based deduplication.
+    columns:
+      - name: snapshot_id
+        data_tests: [not_null]
+      - name: source_row_number
+        data_tests: [not_null]
+      - name: source_id
+        data_tests: [not_null]
+      - name: title_display
+        data_tests: [not_null]
+      - name: checkouts
+        data_tests: [not_null]
+  - name: quarantine_records
+    description: One blocking reason for one Bronze source row and contract version.
+    columns:
+      - name: snapshot_id
+        data_tests: [not_null]
+      - name: source_row_number
+        data_tests: [not_null]
+      - name: rule_code
+        data_tests: [not_null]
+  - name: snapshot_quality
+    description: One per-snapshot reconciliation result for each Silver contract version.
+    columns:
+      - name: snapshot_id
+        data_tests: [not_null]
+      - name: status
+        data_tests: [not_null]
+  - name: pipeline_gate
+    description: Whole range gate; active relations are empty unless every expected month and scope passes.
+    columns:
+      - name: status
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['PASS']
+  - name: active_overview_groups
+    description: Current overview rows, visible only when the whole Silver range passes.
+  - name: active_detail_records
+    description: Current detail rows, visible only when the whole Silver range passes.
