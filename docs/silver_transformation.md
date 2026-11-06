@@ -37,8 +37,8 @@ bước đối chiếu Raw với registry của CLI này.
 `snapshot_quality` và các bảng dữ liệu giữ bản ghi theo contract version.
 `run_snapshot_selection` là lịch sử append theo `invocation_id`. Các view
 `active_*` chỉ dùng snapshot mới nhất, contract version hiện hành và gate PASS.
-Gold sau này cần đọc các view này cùng bằng chứng publication/data version;
-chưa có Gold trong repo.
+Gold chỉ đọc hai view `silver.dq_approved_*` khi DQ Gate PASS, pin snapshot
+theo build và lưu provenance ở [publication](gold_analytics_marts.md).
 Sau Silver, chạy [module Data Quality](data_quality.md) để đối soát độc lập
 với manifest Raw theo từng định dạng và mở `silver.dq_approved_*` cho Gold.
 
