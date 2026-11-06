@@ -1,0 +1,114 @@
+version: 2
+
+models:
+  - name: dim_month
+    columns:
+      - name: month_start
+        data_tests: [not_null, unique]
+      - name: year_month
+        data_tests: [not_null, unique]
+  - name: dim_format
+    columns:
+      - name: format_key
+        data_tests: [not_null, unique]
+  - name: dim_book_record
+    columns:
+      - name: book_record_key
+        data_tests: [not_null, unique]
+      - name: format_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_format')
+                field: format_key
+  - name: monthly_overview
+    columns:
+      - name: data_version
+        data_tests: [not_null]
+      - name: month_start
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_month')
+                field: month_start
+      - name: format_key
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['EBOOK', 'PRINT_BOOK']
+  - name: book_monthly_stats
+    columns:
+      - name: book_record_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_book_record')
+                field: book_record_key
+      - name: month_start
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_month')
+                field: month_start
+  - name: book_monthly_features
+    columns:
+      - name: book_record_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_book_record')
+                field: book_record_key
+      - name: month_start
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_month')
+                field: month_start
+  - name: overview_source_lineage
+    columns:
+      - name: snapshot_id
+        data_tests: [not_null]
+      - name: source_row_number
+        data_tests: [not_null]
+  - name: book_source_lineage
+    columns:
+      - name: snapshot_id
+        data_tests: [not_null]
+      - name: source_row_number
+        data_tests: [not_null]
+
+unit_tests:
+  - name: book_features_missing_vs_zero
+    model: book_monthly_features
+    given:
+      - input: ref('dim_book_record')
+        rows:
+          - {book_record_key: A, format_key: EBOOK}
+      - input: ref('dim_month')
+        rows:
+          - {month_start: '2023-01-01'}
+          - {month_start: '2023-02-01'}
+          - {month_start: '2023-03-01'}
+          - {month_start: '2023-04-01'}
+          - {month_start: '2023-05-01'}
+          - {month_start: '2023-06-01'}
+      - input: ref('book_monthly_stats')
+        rows:
+          - {book_record_key: A, month_start: '2023-01-01', checkouts: 0}
+          - {book_record_key: A, month_start: '2023-03-01', checkouts: 5}
+          - {book_record_key: A, month_start: '2023-04-01', checkouts: 0}
+          - {book_record_key: A, month_start: '2023-05-01', checkouts: 0}
+          - {book_record_key: A, month_start: '2023-06-01', checkouts: 7}
+    expect:
+      rows:
+        - {book_record_key: A, month_start: '2023-01-01', observed: true, checkouts: 0, rolling_3m_sum: null, book_growth_3m: null}
+        - {book_record_key: A, month_start: '2023-02-01', observed: false, checkouts: null, rolling_3m_sum: null, book_growth_3m: null}
+        - {book_record_key: A, month_start: '2023-03-01', observed: true, checkouts: 5, rolling_3m_sum: null, book_growth_3m: null}
+        - {book_record_key: A, month_start: '2023-04-01', observed: true, checkouts: 0, rolling_3m_sum: null, book_growth_3m: null}
+        - {book_record_key: A, month_start: '2023-05-01', observed: true, checkouts: 0, rolling_3m_sum: 5, book_growth_3m: null}
+        - {book_record_key: A, month_start: '2023-06-01', observed: true, checkouts: 7, rolling_3m_sum: 7, book_growth_3m: null}
