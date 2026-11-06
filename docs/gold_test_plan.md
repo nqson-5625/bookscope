@@ -1,8 +1,11 @@
 # Gold Test Plan — v1_2026_11_04
 
-Chưa chạy Gold tests vì chưa có Gold model. Khi triển khai, mọi phép kiểm
-BLOCK phải chạy trên **cùng `data_version` và 72 snapshot đã pin** trước
-promotion. Query chỉ đọc `silver.dq_approved_*` khi DQ gate PASS; số cố định
+Các kiểm thử đã triển khai trong `dbt_bookscope/models/gold/schema.yml`,
+`dbt_bookscope/tests/gold/`, `src/modules/gold_analytics_marts/validation.py`
+và `tests/test_gold_analytics_marts.py`. Mọi phép kiểm BLOCK chạy trên cùng
+`build_id` và 72 snapshot đã pin trước promotion; khi đủ điều kiện,
+`data_version` được tính từ output digest. Query chỉ đọc `silver.dq_approved_*`
+khi DQ gate PASS; số cố định
 trong [profile](gold_profile_2026-11-04.md) là mốc khảo sát, không thay thế
 đối soát động với snapshot/version được chọn.
 
@@ -19,15 +22,16 @@ trong [profile](gold_profile_2026-11-04.md) là mốc khảo sát, không thay t
 | Temporal leakage | Không dùng cohort chọn từ cả năm 2023 để đánh giá/backtest trước `2023-12`; kỳ sự cố chỉ gắn cờ theo policy, không tự sửa số nguồn. | BLOCK |
 | Replay/idempotency | Hai build cùng selection/rules/output cho cùng `data_version`, cùng digest và cùng số dòng; không duplicate fact/lineage; version cũ còn nguyên. | BLOCK |
 | Publication | Snapshot mới chưa DQ duyệt, DQ revision đổi, thiếu một trong 72 snapshot, Gold test fail hoặc digest collision: không đổi `current_publication`; PUBLISHED cũ vẫn đọc được. | BLOCK |
+| Published Dimension | UPDATE/DELETE mọi dòng `dim_month`, `dim_format`, `dim_book_record` đã được version PUBLISHED dùng phải bị chặn; INSERT dòng mới hợp lệ được phép. TRUNCATE bị chặn. | BLOCK |
+| Concurrent builds | Hai Gold build cùng khởi chạy được thực hiện tuần tự; mỗi build có `manifest.json`/`run_results.json` riêng, invocation ID và artifact checksum đúng `build_id`; version cũ và pointer không đổi khi replay. | BLOCK |
 
-Kiểm thử DB phải dùng transaction/fixture riêng và rollback sau khi gây lỗi.
-`dbt build --select path:models/gold` chỉ xác minh model/test Gold; runner còn
-phải kiểm tra Raw/DQ pin, output digest và pointer promotion. Khi dbt có Gold
-models, thêm schema tests (`not_null`, `unique`, `relationships`,
-`accepted_values`) và singular SQL tests cho reconciliation theo scope, key,
-calendar và version; chạy pytest/unittest cho hàm hash, digest, replay và
-transaction publication. Lưu kết quả theo build/version để audit được lần
-publish thực tế, không chỉ log console.
+Fixture lỗi DB dùng transaction riêng và rollback. dbt build chạy 8 models,
+31 schema/singular tests; runner kiểm tra đủ danh tính model/test trong
+`run_results.json` và `manifest.json`, đối soát lại với Silver, tính digest
+trên staging, so với bản versioned sau khi copy và khóa DQ/source state trước
+promotion. Bằng chứng dbt, validation, digest và trạng thái từng build được
+lưu ở `ops.gold_builds`; test độc lập so Python reference với KPI thực tế.
+Xem [nghiệm thu G3](gold_g3_acceptance_2026-11-04.md) cho số liệu của lần chạy.
 
 Tiêu chuẩn nghiệm thu G3: tất cả BLOCK tests PASS trên dữ liệu thật 36 tháng,
 fixture lỗi có chủ đích bị chặn, replay cùng version có digest bằng nhau, và
