@@ -1,6 +1,6 @@
 # BookScope
 
-Hệ thống batch phân tích lượt mượn sách của Seattle Public Library. [Thiết kế kỹ thuật](docs/BookScope.pdf) quy định luồng: Seattle Open Data → Python ingestion → Raw JSONL.gz → PostgreSQL Bronze → dbt Silver/Gold → Python Data Science → Streamlit. Repo hiện có `project_foundation`, `source_ingestion`, `raw_snapshot`, `bronze_loading`, `silver_transformation`, `data_quality` và hạ tầng PostgreSQL; Gold và các lớp sau chưa được xây dựng.
+Hệ thống batch phân tích lượt mượn sách của Seattle Public Library. [Thiết kế kỹ thuật](docs/BookScope.pdf) quy định luồng: Seattle Open Data → Python ingestion → Raw JSONL.gz → PostgreSQL Bronze → dbt Silver/Gold → Python Data Science → Streamlit. Repo hiện có `project_foundation`, `source_ingestion`, `raw_snapshot`, `bronze_loading`, `silver_transformation`, `data_quality`, `gold_analytics_marts` và hạ tầng PostgreSQL.
 
 ## Chạy project_foundation
 
@@ -92,9 +92,12 @@ $env:PYTHONPATH = "src"
 ```
 
 Xem [hướng dẫn dbt](docs/dbt_setup.md), [tài liệu Silver](docs/silver_transformation.md)
-và [hướng dẫn Data Quality](docs/data_quality.md). Gold sau này dùng các view
+và [hướng dẫn Data Quality](docs/data_quality.md). Gold dùng các view
 `silver.dq_approved_*` khi gate DQ PASS.
 
 [Gold Entry Gate 04/11/2026](docs/gold_entry_gate_2026-11-04.md) đã chốt
-profile, KPI, contract/ERD, publication policy và test plan để bắt đầu
-`gold_analytics_marts`; chưa có Gold model hoặc bản công bố dữ liệu.
+profile, KPI, contract/ERD, publication policy và test plan. Module Gold đã
+triển khai theo [hướng dẫn chạy](docs/gold_analytics_marts.md); xem
+[nghiệm thu G3](docs/gold_g3_acceptance_2026-11-04.md) và
+[kiểm chứng integrity/concurrency](docs/gold_integrity_2026-11-06.md) để biết
+kết quả thực tế.
