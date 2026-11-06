@@ -1,7 +1,9 @@
 # Gold Data Contract, logical schema và publication — v1_2026_11_04
 
-Trạng thái: **thiết kế đầu vào cho `gold_analytics_marts`**, chưa phải bảng
-Gold đã triển khai. Bằng chứng profile nằm ở
+Trạng thái: **đã triển khai và công bố qua `gold_analytics_marts`**.
+Physical schema nằm tại `sql/gold/001_publications.sql`; dbt tạo model trong
+schema staging riêng, Python runner kiểm thử và chuyển dữ liệu vào các bảng
+versioned trước khi đổi con trỏ công bố. Bằng chứng profile nằm ở
 [Gold entry profiling](gold_profile_2026-11-04.md); công thức ở
 [KPI Specification](gold_kpi_spec.md). Chỉ đọc hai view
 `silver.dq_approved_*` và xác nhận `ops.dq_gate.status = 'PASS'` trong suốt
@@ -23,6 +25,8 @@ mỗi `(stream, scope_id, month_start)`, 72 snapshot mỗi phiên bản.
 | `ops.data_publications` | `data_version` | Trạng thái build/publish, `dq_run_id`, source selection, contract/code/cohort hash, output digest, thời gian. |
 | `ops.publication_snapshots` | `(data_version, stream, scope_id, month_start)` | 72 khóa snapshot đã chọn; FK `data_version` và `snapshot_id`. |
 | `ops.current_publication` | singleton `id=1` | Con trỏ FK tới một `data_version` PUBLISHED, cập nhật nguyên tử. |
+| `ops.gold_builds` | `build_id` | Lịch sử từng build, pin DQ run, trạng thái, kết quả dbt/validation, digest và lỗi. |
+| `ops.gold_build_pins` | `(build_id, stream, scope_id, month_start)` | 72 snapshot/manifest cố định cho staging; không thay thế publication snapshots. |
 
 `checkouts` và số dòng fact là số nguyên không âm; cộng bằng `numeric` khi
 tính trung gian, chỉ cast sang `bigint` sau kiểm tra biên. `format_key` và
@@ -36,13 +40,14 @@ Các cột tối thiểu ngoài khóa:
 | Bảng | Cột bắt buộc và kiểu logic | FK cần kiểm tra |
 | --- | --- | --- |
 | `dim_book_record` | `identity_version text`, `title_raw text`, `creator_raw text NULL`, `materialtype_cohort text`, `checkouttype_raw text`, `format_key text`, `cohort_sha256 char(64)`, `title_display text` | `format_key → dim_format` |
-| `monthly_overview` | `checkouts bigint`, `source_row_count bigint`, `source_group_count bigint`, `source_snapshot_id text`, `mom_change numeric NULL`, `yoy_change numeric NULL`, `rolling_3m_sum numeric NULL`, `format_share numeric NULL`, `metric_status text` | `data_version → data_publications`, `month_start → dim_month`, `format_key → dim_format`, snapshot → `publication_snapshots` |
+| `monthly_overview` | `checkouts bigint`, `source_row_count bigint`, `source_group_count bigint`, `source_snapshot_id text`, `detail_checkouts bigint`, `active_book_records integer`, `cohort_coverage numeric NULL`, `mom_change numeric NULL`, `yoy_change numeric NULL`, `rolling_3m_sum bigint NULL`, `rolling_3m_avg numeric NULL`, `format_share numeric NULL`, `metric_status jsonb` | `data_version → data_publications`, `month_start → dim_month`, `format_key → dim_format`, snapshot → `publication_snapshots` |
 | `book_monthly_stats` | `checkouts bigint`, `source_record_count bigint`, `source_snapshot_id text` | `book_record_key → dim_book_record`, month/format/publication/snapshot như trên |
-| `book_monthly_features` | `format_key text`, `observed boolean`, `checkouts bigint NULL`, `rolling_3m_sum numeric NULL`, `mom_change numeric NULL`, `yoy_change numeric NULL`, `book_growth_3m numeric NULL`, `metric_status text` | `book_record_key → dim_book_record`, `month_start → dim_month`, `data_version → data_publications` |
+| `book_monthly_features` | `format_key text`, `observed boolean`, `checkouts bigint NULL`, `rolling_3m_sum bigint NULL`, `rolling_3m_avg numeric NULL`, `mom_change numeric NULL`, `yoy_change numeric NULL`, `book_growth_3m numeric NULL`, `metric_status jsonb` | `book_record_key → dim_book_record`, `month_start → dim_month`, `data_version → data_publications` |
 | Hai bảng lineage | `checkouts bigint`, `month_start date`, `format_key text`, `scope_id text`; overview thêm `source_row_count bigint`, detail thêm `book_record_key text` | FK composite đến fact cùng `data_version`, tháng, format, scope (và book key nếu detail) |
-| `data_publications` | `status text`, `dq_run_id uuid`, `selection_sha256 char(64)`, `cohort_sha256 char(64)`, `gold_contract_version text`, `identity_version text`, `code_sha256 char(64)`, `output_sha256 char(64)`, `created_at timestamptz`, `published_at timestamptz NULL` | `dq_run_id → ops.dq_runs` |
+| `data_publications` | `status STAGED/PUBLISHED`, `dq_run_id uuid`, `selection_sha256 char(64)`, `cohort_sha256 char(64)`, Silver/mapping/DQ/Gold/identity versions, DQ code/config hashes, DQ source state, Gold `code_sha256`, `output_sha256`, thời gian | `dq_run_id → ops.dq_runs`; PUBLISHED bất biến bằng trigger |
 | `publication_snapshots` | `snapshot_id text`, `manifest_sha256 char(64)` | `data_version → data_publications`, `snapshot_id → ops.data_snapshots` |
 | `current_publication` | `data_version char(64)`, `switched_at timestamptz` | `data_version → data_publications` với status PUBLISHED |
+| `gold_builds` / `gold_build_pins` | `build_id uuid`, DQ run, selection/source state, snapshot/manifest, dbt/test evidence | FK tới DQ run và Raw snapshot; dùng trong staging, có thể giữ cả run thất bại để audit |
 
 Logical FK tới `publication_snapshots` cần unique phụ
 `(data_version, stream, scope_id, month_start, snapshot_id)` nếu triển khai
@@ -104,6 +109,13 @@ FK tới các bảng Gold cần mang `data_version` ở quan hệ fact/lineage. 
 giữ PK ổn định theo identity version; fact tới dimension bằng
 `book_record_key`. `ops.publication_snapshots` pin nguồn để bản cũ có thể
 tái lập dù lựa chọn snapshot hiện tại đã đổi.
+Trigger trên ba Dimension chặn UPDATE/DELETE nếu khóa đang được bất kỳ phiên
+bản PUBLISHED nào sử dụng. INSERT bản ghi mới hợp lệ vẫn được phép;
+`dim_format` hiện chỉ có hai giá trị được hợp đồng chấp nhận. TRUNCATE bị chặn.
+Trigger dùng cùng khóa giao dịch với publication để tránh sửa Dimension trong
+lúc chuyển bản công bố.
+Ba view `gold.current_monthly_overview`, `gold.current_book_monthly_stats` và
+`gold.current_book_monthly_features` chỉ đọc phiên bản đang được trỏ tới.
 
 ## Validation và provenance
 
@@ -122,8 +134,13 @@ tái lập dù lựa chọn snapshot hiện tại đã đổi.
 
 ## Data versioning và publication policy
 
-1. Build bắt đầu khi DQ gate PASS. Pin 72 snapshot ID/hash và DQ run; ghi
-   bảng Gold vào staging theo `build_id`, không sửa bản PUBLISHED.
+1. Build bắt đầu khi DQ gate PASS. Pin 72 snapshot ID/hash và DQ run trong
+   `ops.gold_build_pins`; dbt ghi bảng vào schema `gold_stage_<build_id>`,
+   không sửa bản PUBLISHED. Artifact dbt (`manifest.json`, `run_results.json`
+   và log) nằm tại `dbt_bookscope/target_gold/<build_id>/`. Runner giữ khóa
+   Gold build trong suốt thời gian dbt chạy, kiểm thử và publication để các
+   build trên máy 8 GB thực hiện tuần tự. dbt thủ công mặc định dùng
+   `gold_sandbox`.
 2. Tính digest đầu ra trên các hàng dimension/fact/feature/lineage đã sắp thứ tự,
    bỏ timestamp thực thi. `data_version = SHA256` của serialization có phiên
    bản gồm selection + manifest/cohort hash, mapping/Silver/Gold/DQ/identity
@@ -135,11 +152,14 @@ tái lập dù lựa chọn snapshot hiện tại đã đổi.
 4. Trước promotion, trong một giao dịch khóa các revision nguồn DQ, kiểm tra
    lại DQ gate PASS, đúng `dq_run_id` đã pin, source state và snapshot selection
    vẫn đúng, 72 nguồn đã
-   pin và mọi Gold test PASS. Tạo/đánh dấu publication PUBLISHED rồi đổi
-   `ops.current_publication` nguyên tử. Lỗi giữ nguyên con trỏ cũ.
+   pin và mọi Gold test PASS. Copy vào bảng versioned khi publication còn
+   STAGED, so lại output digest với staging, chuyển PUBLISHED rồi đổi
+   `ops.current_publication` nguyên tử. Trigger ngăn sửa rows của bản
+   PUBLISHED; lỗi giữ nguyên con trỏ cũ.
 5. Giữ các bản PUBLISHED trước và mapping snapshot của chúng để truy vấn/replay.
    Snapshot COMPLETE mới chưa DQ duyệt không được fallback sang bản cũ để
    tạo publication mới; bản cũ vẫn phục vụ qua con trỏ hiện tại.
 
-Gold mart và Runner phải thực hiện chính sách này cùng nhau. Tài liệu hiện
-chỉ chốt hợp đồng; chưa công bố Gold hay thay con trỏ dữ liệu.
+Lệnh, trạng thái và kết quả nghiệm thu thực tế nằm ở
+[hướng dẫn Gold](gold_analytics_marts.md) và
+[báo cáo G3](gold_g3_acceptance_2026-11-04.md).
