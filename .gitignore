@@ -8,5 +8,6 @@ data/profiles/
 *.log
 .venv/
 dbt_bookscope/target/
+dbt_bookscope/target_gold/
 dbt_bookscope/dbt_packages/
 dbt_bookscope/.user.yml
