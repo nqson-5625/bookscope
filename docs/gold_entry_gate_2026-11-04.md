@@ -1,5 +1,8 @@
 # Gold Entry Gate — 04/11/2026
 
+Đây là quyết định **trước khi triển khai**; kết quả Gold sau triển khai ở
+[nghiệm thu G3](gold_g3_acceptance_2026-11-04.md).
+
 **Quyết định: PASS để bắt đầu triển khai `gold_analytics_marts`.** Đây là
 nghiệm thu đầu vào và thiết kế. Chưa có Gold fact/model, chưa đạt G3, chưa có
 publication hoặc chuyển con trỏ công bố.
