@@ -6,7 +6,9 @@ Gold/DS ở mức tổng quan và chưa phải DDL.
 
 Theo mục 5 của [BookScope.pdf](BookScope.pdf). Grain Silver đã chốt.
 Profile identity đã hoàn tất ngày 04/11/2026; [Gold Data Contract và ERD](gold_contract.md)
-là thiết kế hiện hành cho khóa tuple cohort, bảng Gold, FK và publication.
+là hợp đồng hiện hành cho khóa tuple cohort, bảng Gold, FK và publication.
+DDL thực tế nằm ở `sql/gold/001_publications.sql`, kết quả ở
+[nghiệm thu G3](gold_g3_acceptance_2026-11-04.md).
 Sơ đồ tổng quan bên dưới chỉ giữ vai trò bối cảnh kiến trúc.
 
 ```mermaid
