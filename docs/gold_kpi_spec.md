@@ -1,5 +1,12 @@
 # Gold KPI Specification — v1_2026_11_04
 
+Trạng thái triển khai: `gold.monthly_overview` chứa các KPI theo format và
+chỉ số đối chiếu cohort; `gold.book_monthly_features` chứa các KPI theo tuple.
+`metric_status` là JSONB với trạng thái riêng cho từng phép tính, gồm `OK`,
+`INSUFFICIENT_HISTORY`, `NEW_ACTIVITY`, `NO_ACTIVITY`, `ZERO_DENOMINATOR`.
+Đối chiếu bằng Python reference và SQL tests được ghi ở
+[nghiệm thu G3](gold_g3_acceptance_2026-11-04.md).
+
 Ký hiệu `O(m,f)` là tổng checkouts từ overview đã DQ duyệt ở tháng `m`,
 định dạng `f`, scope `ALL_ELIGIBLE_AGG`. `B(k,m)` là tổng checkouts của các
 dòng detail đã duyệt mang `book_record_key = k` trong tháng `m`, scope
@@ -20,6 +27,11 @@ dòng detail đã duyệt mang `book_record_key = k` trong tháng `m`, scope
 | `yoy_change` | `(C(m)-C(m−12))/C(m−12)` | Grain chuỗi tương ứng | Cần đúng tháng năm trước, cùng scope/key; 12 tháng đầu NULL; mẫu số 0 xử lý như MoM. |
 | `rolling_3m_sum`, `rolling_3m_avg` | Tổng và trung bình `C(m−2), C(m−1), C(m)` | Grain chuỗi tương ứng | Chỉ tính đủ ba tháng lịch có quan sát và PASS; không lấp khoảng trống bằng 0. Dùng `numeric` cho tổng trung gian. |
 | `book_growth_3m` | `(S_recent−S_previous)/S_previous`, mỗi `S` là tổng ba tháng liền kề | `k × evaluation_month × SELECTED_DETAIL` | Cần đủ sáu tháng quan sát; `S_previous=0<S_recent` → `NEW_ACTIVITY` và ratio NULL; cả hai 0 → `NO_ACTIVITY`; thiếu → NULL. |
+
+`active_book_records`, `detail_checkouts` và `cohort_coverage` được lưu trên
+`gold.monthly_overview` như chỉ số đối chiếu với cùng tháng/format; cột
+`scope_id` của fact vẫn là `ALL_ELIGIBLE_AGG`. Không cộng hai scope thành một
+tổng lượt mượn.
 
 `C` trong công thức thời gian là `O` hoặc `B` của **cùng grain**. Không
 so MoM của một scope với số liệu scope khác. `0` là giá trị quan sát hợp lệ;
