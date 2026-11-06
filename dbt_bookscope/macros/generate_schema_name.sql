@@ -6,7 +6,7 @@
       and custom_schema_name | trim == 'gold'
       and node.package_name == 'dbt_bookscope'
       and node.fqn[1] == 'gold' -%}
-    gold
+    {{ var('gold_stage_schema', 'gold_sandbox') }}
   {%- else -%}
     {{ default_schema }}_{{ custom_schema_name | trim }}
   {%- endif -%}
